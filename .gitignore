@@ -1,0 +1,12 @@
+# Сборка
+build/
+.build/
+.swiftpm/
+DerivedData/
+
+# Генерируется build.sh при каждой сборке
+Shared/BuildInfo.swift
+
+# macOS
+.DS_Store
+*.xcuserstate

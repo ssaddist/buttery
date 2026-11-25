@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Тесты и сборка
+        run: ./build.sh --dmg
+
+      - name: Артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: Buttery
+          path: build/Buttery-*.dmg
+
+      - name: Релиз
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" build/Buttery-*.dmg --title "Buttery $GITHUB_REF_NAME" --generate-notes
