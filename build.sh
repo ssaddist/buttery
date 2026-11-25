@@ -60,9 +60,22 @@ if [[ "$ARGS" == *" --dmg "* ]]; then
   DMG="build/Buttery-$VERSION.dmg"
   stage=$(mktemp -d)
   cp -R "$APP" "$stage/"
-  ln -s /Applications "$stage/Applications"
   rm -f "$DMG"
-  hdiutil create -quiet -srcfolder "$stage" -volname Buttery -fs HFS+ -format UDZO -imagekey zlib-level=9 -o "$DMG"
+  if command -v create-dmg >/dev/null; then
+    swiftc -O Tools/MakeDMGBackground.swift -o "$stage/../makebg"
+    "$stage/../makebg" "$stage/../bg.png" 1
+    "$stage/../makebg" "$stage/../bg@2x.png" 2
+    tiffutil -cathidpicheck "$stage/../bg.png" "$stage/../bg@2x.png" -out "$stage/../bg.tiff" 2>/dev/null
+    create-dmg --volname Buttery --volicon "$ICNS" --background "$stage/../bg.tiff" \
+      --window-pos 200 120 --window-size 660 400 --icon-size 128 --text-size 13 \
+      --icon Buttery.app 170 190 --hide-extension Buttery.app --app-drop-link 490 190 \
+      --no-internet-enable "$stage/../Buttery.dmg" "$stage" >/dev/null
+    mv "$stage/../Buttery.dmg" "$DMG"
+    rm -f "$stage/../makebg" "$stage/../bg.png" "$stage/../bg@2x.png" "$stage/../bg.tiff"
+  else
+    ln -s /Applications "$stage/Applications"
+    hdiutil create -quiet -srcfolder "$stage" -volname Buttery -fs HFS+ -format UDZO -imagekey zlib-level=9 -o "$DMG"
+  fi
   rm -rf "$stage"
   echo "Образ: $DMG"
 fi
